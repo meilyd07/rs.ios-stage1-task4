@@ -4,15 +4,14 @@
 + (NSInteger)maxProductOf:(NSInteger)numberOfItems itemsFromArray:(NSArray *)array {
     
     NSPredicate *predicate = [NSPredicate predicateWithFormat:
-    @"self isKindOfClass: %@",
-    [NSNumber class]];
+                              @"self isKindOfClass: %@",
+                              [NSNumber class]];
     NSArray *filteredArray = [array filteredArrayUsingPredicate:predicate];
     NSInteger filteredCount = [filteredArray count];
     if (filteredCount > 0) {
-    
-        NSMutableArray *sortedArray = [[filteredArray sortedArrayUsingFunction:sortAbs context:NULL] mutableCopy];
-
-        int result = 1;
+        
+        NSArray *sortedArray = [filteredArray sortedArrayUsingFunction:sortAbs context:NULL];
+        NSInteger result = 1;
         
         if (numberOfItems >= [sortedArray count]) {
             for (NSNumber *item in sortedArray) {
@@ -20,36 +19,34 @@
             }
             return result;
         } else {
-//            NSArray *subArray = [sortedArray subarrayWithRange:NSMakeRange(0, numberOfItems)];
-//            for (NSInteger i = 0; i < numberOfItems; i++) {
-//                result *= [[sortedArray objectAtIndex:i] integerValue];
-//            }
-//            if (result < 0) {
-//                
-//                NSPredicate * predicateNegativeValues = [NSPredicate predicateWithFormat:@"integerValue < 0"];
-//                NSArray * negativeNumbersArray = [sortedArray filteredArrayUsingPredicate:predicate];
-//            }
-            
-//            NSPredicate * predicateNegativeValues = [NSPredicate predicateWithFormat:@"integerValue < 0"];
-//            NSArray * negativeNumbersArray = [sortedArray filteredArrayUsingPredicate:predicate];
-//            NSInteger countOfNegativeNumbers = [negativeNumbersArray count];
-            
-//            if ((countOfNegativeNumbers > 0) && !(countOfNegativeNumbers % 2))
-//            while (result < 0) {
-//                <#statements#>
-//            }
             
             //multiple last n numbers
-            NSPredicate * predicate = [NSPredicate predicateWithFormat:@"integerValue >= 0"];
-            NSArray * positiveNumbers = [sortedArray filteredArrayUsingPredicate:predicate];
-            int positiveResult = 1;
+            NSPredicate * predicate = [NSPredicate predicateWithFormat:@"intValue >= 0"];
+            NSMutableArray * positiveNumbers = [[sortedArray filteredArrayUsingPredicate:predicate] mutableCopy];
             
-            for (NSInteger i = 0; i < numberOfItems; i++) {
-                result *= [[sortedArray objectAtIndex:i] integerValue];
-                positiveResult *= [[positiveNumbers objectAtIndex:i] integerValue];
+            if (([positiveNumbers count] == 0) && (numberOfItems % 2)) {
+                //all negative and odd number to multiply
+                sortedArray = [[sortedArray reverseObjectEnumerator] allObjects];
             }
             
-            return (result > positiveResult) ? result : positiveResult;
+            NSInteger lastNegativeIndex = -1;
+            
+            for (NSInteger i = 0; i < numberOfItems; i++) {
+                NSNumber *objectToMultiply = [sortedArray objectAtIndex:i];
+                result *= [objectToMultiply integerValue];
+                
+                [positiveNumbers removeObject:objectToMultiply]; //removed already used
+                if ([objectToMultiply intValue] < 0) {
+                    lastNegativeIndex = i;
+                }
+            }
+            
+            if ((result < 0) && (lastNegativeIndex >= 0) && ([positiveNumbers count] > 0)) {
+                result = result / [sortedArray[lastNegativeIndex] integerValue] * [[positiveNumbers firstObject] integerValue];
+            }
+            
+            
+            return result;
         }
     } else {
         return 0;
